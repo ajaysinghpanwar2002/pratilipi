@@ -19,14 +19,17 @@ RUN go build -o user_service ./cmd/user_service
 # Stage 2: Run the Go binary
 FROM alpine:latest
 
-# Set up timezone if needed (optional)
-RUN apk add --no-cache tzdata
+# Install bash and set up timezone if needed (optional)
+RUN apk add --no-cache bash tzdata
 
 # Set the current working directory inside the container
 WORKDIR /app
 
 # Copy the binary from the builder stage
 COPY --from=builder /app/user_service /app/user_service
+
+# Copy migration files
+COPY --from=builder /app/cmd/user_service/db/migrations ./db/migrations
 
 # Copy the wait-for-it script
 COPY wait-for-it.sh /app/wait-for-it.sh
@@ -38,4 +41,4 @@ RUN chmod +x /app/wait-for-it.sh
 EXPOSE 8080
 
 # Command to run the executable
-CMD ["./wait-for-it.sh", "postgres:5432", "--", "./user_service"]
+# CMD ["./wait-for-it.sh", "postgres:5432", "--", "./user_service"]

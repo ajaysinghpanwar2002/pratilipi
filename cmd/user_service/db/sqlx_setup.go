@@ -18,6 +18,13 @@ func Connect() {
 	dbPassword := os.Getenv("POSTGRES_PASSWORD")
 	dbName := os.Getenv("USER_DB")
 
+	// Log the environment variables to verify
+	log.Printf("DB_HOST: %s", dbHost)
+	log.Printf("DB_PORT: %s", dbPort)
+	log.Printf("POSTGRES_USER: %s", dbUser)
+	log.Printf("POSTGRES_PASSWORD: %s", dbPassword)
+	log.Printf("USER_DB: %s", dbName)
+
 	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 		dbHost, dbPort, dbUser, dbPassword, dbName)
 

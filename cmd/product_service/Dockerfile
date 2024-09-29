@@ -20,13 +20,16 @@ RUN go build -o product_service ./cmd/product_service
 FROM alpine:latest
 
 # Set up timezone if needed (optional)
-RUN apk add --no-cache tzdata
+RUN apk add --no-cache bash tzdata
 
 # Set the current working directory inside the container
 WORKDIR /app
 
 # Copy the binary from the builder stage
 COPY --from=builder /app/product_service /app/product_service
+
+# Copy migration files
+COPY --from=builder /app/cmd/product_service/db/migrations ./db/migrations
 
 # Copy the wait-for-it script
 COPY wait-for-it.sh /app/wait-for-it.sh
