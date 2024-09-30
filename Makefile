@@ -54,3 +54,33 @@ run-product-service:
 run-order-service:
 	@echo "Running Order Service..."
 	go run ./cmd/order_service/main.go
+
+# Rebuild and restart user service
+rebuild-user-service:
+	@echo "Rebuilding and restarting User Service..."
+	docker-compose -f $(COMPOSE_FILE) up -d --no-deps --build user_service
+
+# Rebuild and restart product service
+rebuild-product-service:
+	@echo "Rebuilding and restarting Product Service..."
+	docker-compose -f $(COMPOSE_FILE) up -d --no-deps --build product_service
+
+# Rebuild and restart order service
+rebuild-order-service:
+	@echo "Rebuilding and restarting Order Service..."
+	docker-compose -f $(COMPOSE_FILE) up -d --no-deps --build order_service
+
+# View logs of user service
+logs-user-service:
+	@echo "Viewing logs of User Service..."
+	docker-compose -f $(COMPOSE_FILE) logs -f user_service
+
+# View logs of product service
+logs-product-service:
+	@echo "Viewing logs of Product Service..."
+	docker-compose -f $(COMPOSE_FILE) logs -f product_service
+
+# View logs of order service
+logs-order-service:
+	@echo "Viewing logs of Order Service..."
+	docker-compose -f $(COMPOSE_FILE) logs -f order_service
