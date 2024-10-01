@@ -14,6 +14,8 @@ import (
 
 func main() {
 	db.Connect()
+	db.RunMigrations(db.DB.DB)
+
 	defer db.DB.Close()
 
 	err := rabbitmq.ConnectRabbitMQ()

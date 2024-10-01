@@ -52,15 +52,16 @@ func (h *UserHandler) LoginUser(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "Invalid input"})
 	}
 
-	authenticated, user, err := h.service.Authenticate(loginData.Username, loginData.Password)
-	if err != nil || !authenticated {
-		return c.Status(401).JSON(fiber.Map{"error": "Invalid credentials"})
+	// Authenticate user
+	user, err := h.service.Authenticate(loginData.Username, loginData.Password)
+	if err != nil {
+		return c.Status(401).JSON(fiber.Map{"error": err.Error()})
 	}
 
 	// Create JWT token
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id": user.ID,
-		"exp":     time.Now().Add(time.Hour * 24).Unix(),
+		"exp":     time.Now().Add(time.Hour * 24).Unix(), // Token expires in 24 hours
 	})
 
 	tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
@@ -68,7 +69,7 @@ func (h *UserHandler) LoginUser(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"error": "Failed to generate token"})
 	}
 
-	return c.JSON(fiber.Map{"token": tokenString})
+	return c.Status(200).JSON(fiber.Map{"token": tokenString})
 }
 
 func (h *UserHandler) UpdateProfile(c *fiber.Ctx) error {
