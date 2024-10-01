@@ -12,39 +12,56 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func main() {
-	db.Connect()
-	db.RunMigrations(db.DB.DB)
+const (
+	port      = ":8080"
+	queueName = "user_events"
+)
 
+func main() {
+	initializeDatabase()
 	defer db.DB.Close()
 
-	err := rabbitmq.ConnectRabbitMQ()
-	if err != nil {
-		log.Fatalf("RabbitMQ connection failed: %v", err)
-	}
+	initializeRabbitMQ()
 	defer rabbitmq.CloseRabbitMQ()
 
-	// queues for the user events
-	_, err = rabbitmq.Ch.QueueDeclare(
-		"user_events", // name
-		true,          // durable
-		false,         // delete when unused
-		false,         // exclusive
-		false,         // no-wait
-		nil,           // arguments
+	app := fiber.New()
+	setupRoutes(app)
+
+	log.Printf("Service started successfully on port %s", port)
+	if err := app.Listen(port); err != nil {
+		log.Fatalf("Error starting server: %v", err)
+	}
+}
+
+func initializeDatabase() {
+	db.Connect()
+	db.RunMigrations(db.DB.DB)
+}
+
+func initializeRabbitMQ() {
+	if err := rabbitmq.ConnectRabbitMQ(); err != nil {
+		log.Fatalf("RabbitMQ connection failed: %v", err)
+	}
+
+	_, err := rabbitmq.Ch.QueueDeclare(
+		queueName, // name
+		true,      // durable
+		false,     // delete when unused
+		false,     // exclusive
+		false,     // no-wait
+		nil,       // arguments
 	)
 
 	if err != nil {
 		log.Fatalf("Failed to declare queue: %v", err)
 	}
+}
 
+func setupRoutes(app *fiber.App) {
 	userRepo := &repositories.UserRepository{}
-	UserService := services.NewUserService(userRepo)
-	userHandler := handlers.NewUserHandler(UserService)
+	userService := services.NewUserService(userRepo)
+	userHandler := handlers.NewUserHandler(userService)
 
-	app := fiber.New()
-
-	// Routes
 	app.Post("/register", userHandler.RegisterUser)
 	app.Post("/login", userHandler.LoginUser)
 	app.Put("/profile", middlewares.AuthMiddleware, userHandler.UpdateProfile)
@@ -52,10 +69,4 @@ func main() {
 	app.Get("/health", func(c *fiber.Ctx) error {
 		return c.SendString("User Service is running")
 	})
-
-	// Start server
-	log.Println("Service started successfully on port 8080")
-	if err := app.Listen(":8080"); err != nil {
-		log.Fatalf("Error starting server: %v", err)
-	}
 }

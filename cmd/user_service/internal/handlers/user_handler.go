@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"time"
@@ -13,29 +12,46 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 )
 
+const (
+	userEventsQueue = "user_events"
+	jwtSecretEnv    = "JWT_SECRET"
+)
+
+const (
+	StatusBadRequest          = fiber.StatusBadRequest
+	StatusInternalServerError = fiber.StatusInternalServerError
+	StatusCreated             = fiber.StatusCreated
+	StatusOK                  = fiber.StatusOK
+	StatusUnauthorized        = fiber.StatusUnauthorized
+)
+
 type UserHandler struct {
-	service *services.UserService
+	service   *services.UserService
+	jwtSecret string
 }
 
 func NewUserHandler(service *services.UserService) *UserHandler {
-	return &UserHandler{service: service}
+	return &UserHandler{
+		service:   service,
+		jwtSecret: os.Getenv(jwtSecretEnv),
+	}
 }
 
 func (h *UserHandler) RegisterUser(c *fiber.Ctx) error {
 	user := new(models.User)
 	if err := c.BodyParser(&user); err != nil {
-		return c.Status(400).JSON(fiber.Map{"error": "Invalid input"})
+		return errorResponse(c, StatusBadRequest, "Invalid input")
 	}
 
 	if user.Password == "" {
-		return c.Status(400).JSON(fiber.Map{"error": "Password is required"})
+		return errorResponse(c, StatusBadRequest, "Password is required")
 	}
 
 	if err := h.service.RegisterUser(user); err != nil {
-		return c.Status(500).JSON(fiber.Map{"error": "Failed to register user"})
+		return errorResponse(c, StatusInternalServerError, "Failed to register user")
 	}
 
-	err := rabbitmq.EmitEvent("user_events", "UserRegistered", map[string]interface{}{
+	err := rabbitmq.EmitEvent(userEventsQueue, "UserRegistered", map[string]interface{}{
 		"user_id":  user.ID,
 		"username": user.Username,
 		"email":    user.Email,
@@ -45,7 +61,7 @@ func (h *UserHandler) RegisterUser(c *fiber.Ctx) error {
 		log.Printf("Failed to emit event: %v", err)
 	}
 
-	return c.Status(201).JSON(fiber.Map{"message": "User registered successfully", "user_id": user.ID})
+	return c.Status(StatusCreated).JSON(fiber.Map{"message": "User registered successfully", "user_id": user.ID})
 }
 
 func (h *UserHandler) LoginUser(c *fiber.Ctx) error {
@@ -55,13 +71,13 @@ func (h *UserHandler) LoginUser(c *fiber.Ctx) error {
 	}{}
 
 	if err := c.BodyParser(&loginData); err != nil {
-		return c.Status(400).JSON(fiber.Map{"error": "Invalid input"})
+		return errorResponse(c, StatusBadRequest, "Invalid input")
 	}
 
 	// Authenticate user
 	user, err := h.service.Authenticate(loginData.Username, loginData.Password)
 	if err != nil {
-		return c.Status(401).JSON(fiber.Map{"error": err.Error()})
+		return errorResponse(c, StatusUnauthorized, err.Error())
 	}
 
 	// Create JWT token
@@ -70,28 +86,27 @@ func (h *UserHandler) LoginUser(c *fiber.Ctx) error {
 		"exp":     time.Now().Add(time.Hour * 24).Unix(), // Token expires in 24 hours
 	})
 
-	tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
+	tokenString, err := token.SignedString([]byte(h.jwtSecret))
 	if err != nil {
-		return c.Status(500).JSON(fiber.Map{"error": "Failed to generate token"})
+		return errorResponse(c, StatusInternalServerError, "Failed to generate token")
 	}
 
-	return c.Status(200).JSON(fiber.Map{"token": tokenString})
+	return c.Status(StatusOK).JSON(fiber.Map{"token": tokenString})
 }
 
 func (h *UserHandler) UpdateProfile(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(uint) // Extract user_id from JWT
-	fmt.Println("userId", userID)
 
 	var updateData map[string]interface{}
 	if err := c.BodyParser(&updateData); err != nil {
-		return c.Status(400).JSON(fiber.Map{"error": "Invalid input"})
+		return errorResponse(c, StatusBadRequest, "Invalid input")
 	}
 
 	if err := h.service.UpdateProfile(userID, updateData); err != nil {
-		return c.Status(500).JSON(fiber.Map{"error": "Failed to update profile"})
+		return errorResponse(c, StatusInternalServerError, "Failed to update profile")
 	}
 
-	err := rabbitmq.EmitEvent("user_events", "UserProfileUpdated", map[string]interface{}{
+	err := rabbitmq.EmitEvent(userEventsQueue, "UserProfileUpdated", map[string]interface{}{
 		"id": userID,
 	})
 
@@ -100,4 +115,8 @@ func (h *UserHandler) UpdateProfile(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(fiber.Map{"message": "Profile updated successfully"})
+}
+
+func errorResponse(c *fiber.Ctx, statusCode int, message string) error {
+	return c.Status(statusCode).JSON(fiber.Map{"error": message})
 }

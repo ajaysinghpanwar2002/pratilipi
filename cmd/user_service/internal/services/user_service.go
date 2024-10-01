@@ -3,10 +3,20 @@ package services
 import (
 	"database/sql"
 	"errors"
+	"fmt"
+	"log"
 
 	"github.com/ajaysinghpanwar2002/pratilipi/cmd/user_service/internal/models"
 	"github.com/ajaysinghpanwar2002/pratilipi/cmd/user_service/internal/repositories"
 	"golang.org/x/crypto/bcrypt"
+)
+
+const (
+	errUserNotFound        = "user not found"
+	errIncorrectPassword   = "username or password is incorrect"
+	errHashingPassword     = "error hashing password"
+	errCreatingUser        = "error creating user"
+	errUpdatingUserProfile = "error updating user profile"
 )
 
 type UserService struct {
@@ -20,29 +30,44 @@ func NewUserService(repo *repositories.UserRepository) *UserService {
 func (s *UserService) RegisterUser(user *models.User) error {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return err
+		log.Printf("%s: %v", errHashingPassword, err)
+		return fmt.Errorf("%s: %w", errHashingPassword, err)
 	}
 	user.Password = string(hashedPassword)
-	return s.repo.CreateUser(user)
+	if err := s.repo.CreateUser(user); err != nil {
+		log.Printf("%s: %v", errCreatingUser, err)
+		return fmt.Errorf("%s: %w", errCreatingUser, err)
+	}
+	log.Printf("User registered successfully with ID: %d", user.ID)
+	return nil
 }
 
 func (s *UserService) Authenticate(username, password string) (models.User, error) {
 	user, err := s.repo.GetUserByUsername(username)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return user, errors.New("user is not found")
+			log.Printf("%s: %s", errUserNotFound, username)
+			return user, errors.New(errUserNotFound)
 		}
+		log.Printf("Error retrieving user by username: %v", err)
 		return user, err
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 	if err != nil {
-		return user, errors.New("username or password is incorrect")
+		log.Printf("%s: %s", errIncorrectPassword, username)
+		return user, errors.New(errIncorrectPassword)
 	}
 
+	log.Printf("User authenticated successfully: %s", username)
 	return user, nil
 }
 
 func (s *UserService) UpdateProfile(userId uint, updateData map[string]interface{}) error {
-	return s.repo.UpdateUserProfile(userId, updateData)
+	if err := s.repo.UpdateUserProfile(userId, updateData); err != nil {
+		log.Printf("%s: %v", errUpdatingUserProfile, err)
+		return fmt.Errorf("%s: %w", errUpdatingUserProfile, err)
+	}
+	log.Printf("User profile updated successfully for user ID: %d", userId)
+	return nil
 }

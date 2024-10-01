@@ -4,37 +4,44 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
 
-func RunMigrations(db *sql.DB) {
+// RunMigrations runs database migrations
+func RunMigrations(db *sql.DB) error {
 	// Create a migration driver instance
 	driver, err := postgres.WithInstance(db, &postgres.Config{})
 	if err != nil {
-		log.Fatalf("could not create migrate driver: %v", err)
+		return fmt.Errorf("could not create migrate driver: %w", err)
 	}
 
-	// Adjust the path based on your project structure
-	m, err := migrate.NewWithDatabaseInstance(
-		"file://./db/migrations",
-		"postgres", driver)
+	// Get migration path from environment variable or use default
+	migrationPath := os.Getenv("MIGRATION_PATH")
+	if migrationPath == "" {
+		migrationPath = "file://./db/migrations"
+	}
 
+	// Create a new migrate instance
+	m, err := migrate.NewWithDatabaseInstance(
+		migrationPath,
+		"postgres", driver)
 	if err != nil {
-		log.Fatalf("migration failed: %v", err)
+		return fmt.Errorf("migration failed: %w", err)
 	}
 
 	// Apply all pending migrations
-	if err := m.Up(); err != nil {
-		if err == migrate.ErrNoChange {
-			fmt.Println("No new migrations to apply.")
-		} else {
-			log.Fatalf("migration failed: %v", err)
-		}
+	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
+		return fmt.Errorf("migration failed: %w", err)
+	}
+
+	if err == migrate.ErrNoChange {
+		log.Println("No new migrations to apply.")
 	} else {
-		fmt.Println("Migrations applied successfully!")
+		log.Println("Migrations applied successfully!")
 	}
 
 	// Optionally, print the current migration version
@@ -42,6 +49,8 @@ func RunMigrations(db *sql.DB) {
 	if err != nil {
 		log.Printf("Could not fetch migration version: %v", err)
 	} else {
-		fmt.Printf("Current migration version: %d, Dirty state: %v\n", version, dirty)
+		log.Printf("Current migration version: %d, Dirty state: %v", version, dirty)
 	}
+
+	return nil
 }

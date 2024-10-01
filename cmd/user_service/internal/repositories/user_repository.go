@@ -9,15 +9,20 @@ import (
 	"github.com/ajaysinghpanwar2002/pratilipi/cmd/user_service/internal/models"
 )
 
+const (
+	insertUserQuery = `INSERT INTO users (username, password, email, created_at, updated_at) 
+                       VALUES ($1, $2, $3, $4, $5) RETURNING id`
+	selectUserQuery = `SELECT * FROM users WHERE username = $1`
+)
+
 type UserRepository struct{}
 
 func (r *UserRepository) CreateUser(user *models.User) error {
-	query := `INSERT INTO users (username, password, email, created_at, updated_at) 
-              VALUES ($1, $2, $3, $4, $5) RETURNING id`
-	err := db.DB.QueryRow(query, user.Username, user.Password, user.Email, time.Now(), time.Now()).Scan(&user.ID)
+	now := currentTime()
+	err := db.DB.QueryRow(insertUserQuery, user.Username, user.Password, user.Email, now, now).Scan(&user.ID)
 	if err != nil {
 		log.Printf("Failed to register user: %v", err)
-		return err
+		return fmt.Errorf("failed to register user: %w", err)
 	}
 	log.Printf("User registered successfully with ID: %d", user.ID)
 	return nil
@@ -25,16 +30,27 @@ func (r *UserRepository) CreateUser(user *models.User) error {
 
 func (r *UserRepository) GetUserByUsername(username string) (models.User, error) {
 	var user models.User
-	err := db.DB.Get(&user, "SELECT * FROM users WHERE username = $1", username)
+	err := db.DB.Get(&user, selectUserQuery, username)
 	if err != nil {
 		log.Printf("Error retrieving user by username: %v", err)
-		return models.User{}, err
+		return models.User{}, fmt.Errorf("error retrieving user by username: %w", err)
 	}
 	log.Printf("Retrieved user: %s, password hash length: %d", user.Username, len(user.Password))
 	return user, nil
 }
 
 func (r *UserRepository) UpdateUserProfile(userID uint, updateData map[string]interface{}) error {
+	query, values := buildUpdateQuery(updateData, userID)
+	_, err := db.DB.Exec(query, values...)
+	if err != nil {
+		log.Printf("Failed to update user profile: %v", err)
+		return fmt.Errorf("failed to update user profile: %w", err)
+	}
+	log.Printf("User profile updated successfully for user ID: %d", userID)
+	return nil
+}
+
+func buildUpdateQuery(updateData map[string]interface{}, userID uint) (string, []interface{}) {
 	query := "UPDATE users SET "
 	values := []interface{}{}
 	i := 1
@@ -49,8 +65,11 @@ func (r *UserRepository) UpdateUserProfile(userID uint, updateData map[string]in
 	}
 
 	query += ", updated_at = $" + fmt.Sprint(i) + " WHERE id = $" + fmt.Sprint(i+1)
-	values = append(values, updateData["updated_at"], int(userID))
+	values = append(values, currentTime(), int(userID))
 
-	_, err := db.DB.Exec(query, values...)
-	return err
+	return query, values
+}
+
+func currentTime() time.Time {
+	return time.Now()
 }
