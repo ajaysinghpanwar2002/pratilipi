@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"time"
@@ -22,8 +23,12 @@ func NewUserHandler(service *services.UserService) *UserHandler {
 
 func (h *UserHandler) RegisterUser(c *fiber.Ctx) error {
 	user := new(models.User)
-	if err := c.BodyParser(user); err != nil {
+	if err := c.BodyParser(&user); err != nil {
 		return c.Status(400).JSON(fiber.Map{"error": "Invalid input"})
+	}
+
+	if user.Password == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "Password is required"})
 	}
 
 	if err := h.service.RegisterUser(user); err != nil {
@@ -35,6 +40,7 @@ func (h *UserHandler) RegisterUser(c *fiber.Ctx) error {
 		"username": user.Username,
 		"email":    user.Email,
 	})
+
 	if err != nil {
 		log.Printf("Failed to emit event: %v", err)
 	}
@@ -74,6 +80,7 @@ func (h *UserHandler) LoginUser(c *fiber.Ctx) error {
 
 func (h *UserHandler) UpdateProfile(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(uint) // Extract user_id from JWT
+	fmt.Println("userId", userID)
 
 	var updateData map[string]interface{}
 	if err := c.BodyParser(&updateData); err != nil {

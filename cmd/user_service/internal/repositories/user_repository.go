@@ -19,6 +19,7 @@ func (r *UserRepository) CreateUser(user *models.User) error {
 		log.Printf("Failed to register user: %v", err)
 		return err
 	}
+	log.Printf("User registered successfully with ID: %d", user.ID)
 	return nil
 }
 
@@ -26,8 +27,10 @@ func (r *UserRepository) GetUserByUsername(username string) (models.User, error)
 	var user models.User
 	err := db.DB.Get(&user, "SELECT * FROM users WHERE username = $1", username)
 	if err != nil {
+		log.Printf("Error retrieving user by username: %v", err)
 		return models.User{}, err
 	}
+	log.Printf("Retrieved user: %s, password hash length: %d", user.Username, len(user.Password))
 	return user, nil
 }
 

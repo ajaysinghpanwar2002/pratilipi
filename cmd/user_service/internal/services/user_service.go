@@ -29,14 +29,12 @@ func (s *UserService) RegisterUser(user *models.User) error {
 func (s *UserService) Authenticate(username, password string) (models.User, error) {
 	user, err := s.repo.GetUserByUsername(username)
 	if err != nil {
-		// Returning a user-friendly message when username is not found
 		if errors.Is(err, sql.ErrNoRows) {
 			return user, errors.New("user is not found")
 		}
 		return user, err
 	}
 
-	// Compare the provided password with the hashed password in DB
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 	if err != nil {
 		return user, errors.New("username or password is incorrect")

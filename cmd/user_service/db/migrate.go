@@ -19,7 +19,7 @@ func RunMigrations(db *sql.DB) {
 
 	// Adjust the path based on your project structure
 	m, err := migrate.NewWithDatabaseInstance(
-		"file://./cmd/user_service/db/migrations", // Ensure this path is correct
+		"file://./db/migrations",
 		"postgres", driver)
 
 	if err != nil {
