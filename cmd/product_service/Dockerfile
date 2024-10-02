@@ -41,4 +41,4 @@ RUN chmod +x /app/wait-for-it.sh
 EXPOSE 8080
 
 # Command to run the executable
-CMD ["./wait-for-it.sh", "postgres:5432", "--", "./product_service"]
+# CMD ["./wait-for-it.sh", "postgres:5432", "--", "./product_service"]

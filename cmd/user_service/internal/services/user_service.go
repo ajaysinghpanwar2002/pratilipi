@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -27,14 +28,14 @@ func NewUserService(repo *repositories.UserRepository) *UserService {
 	return &UserService{repo: repo}
 }
 
-func (s *UserService) RegisterUser(user *models.User) error {
+func (s *UserService) RegisterUser(ctx context.Context, user *models.User) error {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
 		log.Printf("%s: %v", errHashingPassword, err)
 		return fmt.Errorf("%s: %w", errHashingPassword, err)
 	}
 	user.Password = string(hashedPassword)
-	if err := s.repo.CreateUser(user); err != nil {
+	if err := s.repo.CreateUser(ctx, user); err != nil {
 		log.Printf("%s: %v", errCreatingUser, err)
 		return fmt.Errorf("%s: %w", errCreatingUser, err)
 	}
@@ -42,8 +43,8 @@ func (s *UserService) RegisterUser(user *models.User) error {
 	return nil
 }
 
-func (s *UserService) Authenticate(username, password string) (models.User, error) {
-	user, err := s.repo.GetUserByUsername(username)
+func (s *UserService) Authenticate(ctx context.Context, username, password string) (models.User, error) {
+	user, err := s.repo.GetUserByUsername(ctx, username)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			log.Printf("%s: %s", errUserNotFound, username)
@@ -63,8 +64,8 @@ func (s *UserService) Authenticate(username, password string) (models.User, erro
 	return user, nil
 }
 
-func (s *UserService) UpdateProfile(userId uint, updateData map[string]interface{}) error {
-	if err := s.repo.UpdateUserProfile(userId, updateData); err != nil {
+func (s *UserService) UpdateProfile(ctx context.Context, userId uint, updateData map[string]interface{}) error {
+	if err := s.repo.UpdateUserProfile(ctx, userId, updateData); err != nil {
 		log.Printf("%s: %v", errUpdatingUserProfile, err)
 		return fmt.Errorf("%s: %w", errUpdatingUserProfile, err)
 	}

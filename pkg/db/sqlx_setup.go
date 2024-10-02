@@ -1,6 +1,7 @@
 package db
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -29,14 +30,14 @@ func getDBConfig(envVarDB string) DBConfig {
 	}
 }
 
-func Connect(dbNameEnvVar string) error {
+func Connect(ctx context.Context, dbNameEnvVar string) error {
 	config := getDBConfig(dbNameEnvVar)
 
 	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 		config.Host, config.Port, config.User, config.Password, config.Name)
 
 	var err error
-	DB, err = sqlx.Connect("postgres", connStr)
+	DB, err = sqlx.ConnectContext(ctx, "postgres", connStr)
 	if err != nil {
 		return fmt.Errorf("error connecting to database: %w", err)
 	}

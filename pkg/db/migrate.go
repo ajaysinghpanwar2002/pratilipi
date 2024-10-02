@@ -1,6 +1,7 @@
 package db
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"log"
@@ -11,7 +12,7 @@ import (
 )
 
 // RunMigrations runs database migrations for the specified service
-func RunMigrations(db *sql.DB, migrationPath string) error {
+func RunMigrations(ctx context.Context, db *sql.DB, migrationPath string) error {
 	// Create a migration driver instance
 	driver, err := postgres.WithInstance(db, &postgres.Config{})
 	if err != nil {

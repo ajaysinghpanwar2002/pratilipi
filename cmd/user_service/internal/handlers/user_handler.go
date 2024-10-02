@@ -38,6 +38,7 @@ func NewUserHandler(service *services.UserService) *UserHandler {
 }
 
 func (h *UserHandler) RegisterUser(c *fiber.Ctx) error {
+	ctx := c.Context()
 	user := new(models.User)
 	if err := c.BodyParser(&user); err != nil {
 		return errorResponse(c, StatusBadRequest, "Invalid input")
@@ -47,7 +48,7 @@ func (h *UserHandler) RegisterUser(c *fiber.Ctx) error {
 		return errorResponse(c, StatusBadRequest, "Password is required")
 	}
 
-	if err := h.service.RegisterUser(user); err != nil {
+	if err := h.service.RegisterUser(ctx, user); err != nil {
 		return errorResponse(c, StatusInternalServerError, "Failed to register user")
 	}
 
@@ -65,6 +66,7 @@ func (h *UserHandler) RegisterUser(c *fiber.Ctx) error {
 }
 
 func (h *UserHandler) LoginUser(c *fiber.Ctx) error {
+	ctx := c.Context()
 	loginData := struct {
 		Username string `json:"username"`
 		Password string `json:"password"`
@@ -75,7 +77,7 @@ func (h *UserHandler) LoginUser(c *fiber.Ctx) error {
 	}
 
 	// Authenticate user
-	user, err := h.service.Authenticate(loginData.Username, loginData.Password)
+	user, err := h.service.Authenticate(ctx, loginData.Username, loginData.Password)
 	if err != nil {
 		return errorResponse(c, StatusUnauthorized, err.Error())
 	}
@@ -95,6 +97,7 @@ func (h *UserHandler) LoginUser(c *fiber.Ctx) error {
 }
 
 func (h *UserHandler) UpdateProfile(c *fiber.Ctx) error {
+	ctx := c.Context()
 	userID := c.Locals("user_id").(uint) // Extract user_id from JWT
 
 	var updateData map[string]interface{}
@@ -102,7 +105,7 @@ func (h *UserHandler) UpdateProfile(c *fiber.Ctx) error {
 		return errorResponse(c, StatusBadRequest, "Invalid input")
 	}
 
-	if err := h.service.UpdateProfile(userID, updateData); err != nil {
+	if err := h.service.UpdateProfile(ctx, userID, updateData); err != nil {
 		return errorResponse(c, StatusInternalServerError, "Failed to update profile")
 	}
 

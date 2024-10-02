@@ -1,7 +1,11 @@
 package main
 
 import (
+	"context"
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/ajaysinghpanwar2002/pratilipi/cmd/user_service/internal/handlers"
 	"github.com/ajaysinghpanwar2002/pratilipi/cmd/user_service/internal/middlewares"
@@ -19,7 +23,13 @@ const (
 )
 
 func main() {
-	initializeDatabase()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// Handle graceful shutdown
+	go handleShutdown(cancel)
+
+	initializeDatabase(ctx)
 	defer db.DB.Close()
 
 	initializeRabbitMQ()
@@ -34,9 +44,9 @@ func main() {
 	}
 }
 
-func initializeDatabase() {
-	db.Connect("USER_DB")
-	db.RunMigrations(db.DB.DB, migrationPath)
+func initializeDatabase(ctx context.Context) {
+	db.Connect(ctx, "USER_DB")
+	db.RunMigrations(ctx, db.DB.DB, migrationPath)
 }
 
 func initializeRabbitMQ() {
@@ -59,7 +69,7 @@ func initializeRabbitMQ() {
 }
 
 func setupRoutes(app *fiber.App) {
-	userRepo := &repositories.UserRepository{}
+	userRepo := repositories.NewUserRepository()
 	userService := services.NewUserService(userRepo)
 	userHandler := handlers.NewUserHandler(userService)
 
@@ -70,4 +80,12 @@ func setupRoutes(app *fiber.App) {
 	app.Get("/health", func(c *fiber.Ctx) error {
 		return c.SendString("User Service is running")
 	})
+}
+
+func handleShutdown(cancel context.CancelFunc) {
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
+	<-signalChan
+	cancel()
+	log.Println("Shutting down gracefully...")
 }
