@@ -3,18 +3,19 @@ package main
 import (
 	"log"
 
-	"github.com/ajaysinghpanwar2002/pratilipi/cmd/user_service/db"
 	"github.com/ajaysinghpanwar2002/pratilipi/cmd/user_service/internal/handlers"
 	"github.com/ajaysinghpanwar2002/pratilipi/cmd/user_service/internal/middlewares"
 	"github.com/ajaysinghpanwar2002/pratilipi/cmd/user_service/internal/repositories"
 	"github.com/ajaysinghpanwar2002/pratilipi/cmd/user_service/internal/services"
+	"github.com/ajaysinghpanwar2002/pratilipi/pkg/db"
 	"github.com/ajaysinghpanwar2002/pratilipi/pkg/rabbitmq"
 	"github.com/gofiber/fiber/v2"
 )
 
 const (
-	port      = ":8080"
-	queueName = "user_events"
+	port          = ":8080"
+	queueName     = "user_events"
+	migrationPath = "file://./db/migrations"
 )
 
 func main() {
@@ -34,8 +35,8 @@ func main() {
 }
 
 func initializeDatabase() {
-	db.Connect()
-	db.RunMigrations(db.DB.DB)
+	db.Connect("USER_DB")
+	db.RunMigrations(db.DB.DB, migrationPath)
 }
 
 func initializeRabbitMQ() {

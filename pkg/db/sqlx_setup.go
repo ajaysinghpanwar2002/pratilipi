@@ -19,18 +19,18 @@ type DBConfig struct {
 	Name     string
 }
 
-func getDBConfig() DBConfig {
+func getDBConfig(envVarDB string) DBConfig {
 	return DBConfig{
 		Host:     os.Getenv("DB_HOST"),
 		Port:     os.Getenv("DB_PORT"),
 		User:     os.Getenv("POSTGRES_USER"),
 		Password: os.Getenv("POSTGRES_PASSWORD"),
-		Name:     os.Getenv("USER_DB"),
+		Name:     os.Getenv(envVarDB),
 	}
 }
 
-func Connect() error {
-	config := getDBConfig()
+func Connect(dbNameEnvVar string) error {
+	config := getDBConfig(dbNameEnvVar)
 
 	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 		config.Host, config.Port, config.User, config.Password, config.Name)

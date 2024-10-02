@@ -5,8 +5,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/ajaysinghpanwar2002/pratilipi/cmd/user_service/db"
 	"github.com/ajaysinghpanwar2002/pratilipi/cmd/user_service/internal/models"
+	"github.com/ajaysinghpanwar2002/pratilipi/pkg/db"
 )
 
 const (
@@ -24,7 +24,6 @@ func (r *UserRepository) CreateUser(user *models.User) error {
 		log.Printf("Failed to register user: %v", err)
 		return fmt.Errorf("failed to register user: %w", err)
 	}
-	log.Printf("User registered successfully with ID: %d", user.ID)
 	return nil
 }
 
@@ -35,7 +34,6 @@ func (r *UserRepository) GetUserByUsername(username string) (models.User, error)
 		log.Printf("Error retrieving user by username: %v", err)
 		return models.User{}, fmt.Errorf("error retrieving user by username: %w", err)
 	}
-	log.Printf("Retrieved user: %s, password hash length: %d", user.Username, len(user.Password))
 	return user, nil
 }
 
@@ -46,7 +44,6 @@ func (r *UserRepository) UpdateUserProfile(userID uint, updateData map[string]in
 		log.Printf("Failed to update user profile: %v", err)
 		return fmt.Errorf("failed to update user profile: %w", err)
 	}
-	log.Printf("User profile updated successfully for user ID: %d", userID)
 	return nil
 }
 

@@ -11,21 +11,36 @@ import (
 
 var DB *sqlx.DB
 
-func Connect() {
-	dbHost := os.Getenv("DB_HOST")
-	dbPort := os.Getenv("DB_PORT")
-	dbUser := os.Getenv("POSTGRES_USER")
-	dbPassword := os.Getenv("POSTGRES_PASSWORD")
-	dbName := os.Getenv("PRODUCT_DB")
+type DBConfig struct {
+	Host     string
+	Port     string
+	User     string
+	Password string
+	Name     string
+}
+
+func getDBConfig() DBConfig {
+	return DBConfig{
+		Host:     os.Getenv("DB_HOST"),
+		Port:     os.Getenv("DB_PORT"),
+		User:     os.Getenv("POSTGRES_USER"),
+		Password: os.Getenv("POSTGRES_PASSWORD"),
+		Name:     os.Getenv("PRODUCT_DB"),
+	}
+}
+
+func Connect() error {
+	config := getDBConfig()
 
 	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-		dbHost, dbPort, dbUser, dbPassword, dbName)
+		config.Host, config.Port, config.User, config.Password, config.Name)
 
 	var err error
 	DB, err = sqlx.Connect("postgres", connStr)
 	if err != nil {
-		log.Fatalf("Error connecting to database: %v", err)
+		return fmt.Errorf("error connecting to database: %w", err)
 	}
 
 	log.Println("Successfully connected to the database")
+	return nil
 }
