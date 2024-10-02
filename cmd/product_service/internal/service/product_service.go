@@ -36,4 +36,20 @@ func (s *ProductService) GetProductByID(ctx context.Context, id int64) (*models.
 	return product, nil
 }
 
-// Add more methods for updating and deleting products.
+func (s *ProductService) UpdateProduct(ctx context.Context, product *models.Product) error {
+	if err := s.repo.UpdateProduct(ctx, product); err != nil {
+		log.Printf("Failed to update product: %v", err)
+		return fmt.Errorf("failed to update product: %w", err)
+	}
+	log.Printf("Product updated successfully with ID: %d", product.ID)
+	return nil
+}
+
+func (s *ProductService) DeleteProduct(ctx context.Context, id int64) error {
+	if err := s.repo.DeleteProduct(ctx, id); err != nil {
+		log.Printf("Failed to delete product: %v", err)
+		return fmt.Errorf("failed to delete product: %w", err)
+	}
+	log.Printf("Product deleted successfully with ID: %d", id)
+	return nil
+}

@@ -49,4 +49,22 @@ func (r *ProductRepository) GetProductByID(ctx context.Context, id int64) (*mode
 	return &product, nil
 }
 
-// Add other necessary methods like UpdateProduct, DeleteProduct, etc.
+func (r *ProductRepository) UpdateProduct(ctx context.Context, product *models.Product) error {
+	query := `UPDATE products SET name = :name, description = :description, price = :price, stock = :stock, updated_at = NOW() WHERE id = :id`
+	_, err := db.DB.NamedExecContext(ctx, query, product)
+	if err != nil {
+		log.Printf("Failed to update product: %v", err)
+		return fmt.Errorf("failed to update product: %w", err)
+	}
+	return nil
+}
+
+func (r *ProductRepository) DeleteProduct(ctx context.Context, id int64) error {
+	query := `DELETE FROM products WHERE id = $1`
+	_, err := db.DB.ExecContext(ctx, query, id)
+	if err != nil {
+		log.Printf("Failed to delete product: %v", err)
+		return fmt.Errorf("failed to delete product: %w", err)
+	}
+	return nil
+}
