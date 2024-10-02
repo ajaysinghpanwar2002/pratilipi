@@ -25,11 +25,9 @@ func (r *ProductRepository) CreateProduct(ctx context.Context, product *models.P
 		log.Printf("Failed to create product: %v", err)
 		return fmt.Errorf("failed to create product: %w", err)
 	}
-
 	defer rows.Close()
 
 	if rows.Next() {
-		// Scan the result into the product struct (multiple columns)
 		if err := rows.StructScan(product); err != nil {
 			log.Printf("Failed to scan product: %v", err)
 			return fmt.Errorf("failed to scan product: %w", err)

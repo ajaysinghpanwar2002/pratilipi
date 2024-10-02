@@ -31,18 +31,11 @@ func (h *ProductHandler) CreateProduct(c *fiber.Ctx) error {
 		return errorResponse(c, fiber.StatusInternalServerError, "Could not create product")
 	}
 
-	err := rabbitmq.EmitEvent(productEventsQueue, "ProductCreated", map[string]interface{}{
-		"product_id": product.ID,
-		"name":       product.Name,
-		"price":      product.Price,
-		"Stock":      product.Stock,
-	})
-
-	if err != nil {
+	if err := emitProductEvent("ProductCreated", product); err != nil {
 		log.Printf("Failed to emit event: %v", err)
 	}
 
-	return c.Status(fiber.StatusCreated).JSON(fiber.Map{"message": "product created successfully", "user_id": product})
+	return c.Status(fiber.StatusCreated).JSON(fiber.Map{"message": "Product created successfully", "product_id": product.ID})
 }
 
 func (h *ProductHandler) GetProduct(c *fiber.Ctx) error {
@@ -73,12 +66,7 @@ func (h *ProductHandler) UpdateProduct(c *fiber.Ctx) error {
 		return errorResponse(c, fiber.StatusInternalServerError, "Could not update product")
 	}
 
-	err1 := rabbitmq.EmitEvent(productEventsQueue, "InventoryUpdated", map[string]interface{}{
-		"product_id": product.ID,
-		"stock":      product.Stock,
-	})
-
-	if err1 != nil {
+	if err := emitProductEvent("InventoryUpdated", product); err != nil {
 		log.Printf("Failed to emit event: %v", err)
 	}
 
@@ -95,6 +83,15 @@ func (h *ProductHandler) DeleteProduct(c *fiber.Ctx) error {
 		return errorResponse(c, fiber.StatusInternalServerError, "Could not delete product")
 	}
 	return c.SendStatus(fiber.StatusNoContent)
+}
+
+func emitProductEvent(eventType string, product models.Product) error {
+	return rabbitmq.EmitEvent(productEventsQueue, eventType, map[string]interface{}{
+		"product_id": product.ID,
+		"name":       product.Name,
+		"price":      product.Price,
+		"stock":      product.Stock,
+	})
 }
 
 func errorResponse(c *fiber.Ctx, statusCode int, message string) error {

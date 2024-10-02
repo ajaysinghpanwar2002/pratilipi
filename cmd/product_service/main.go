@@ -25,13 +25,16 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	// Handle graceful shutdown
 	go handleShutdown(cancel)
 
-	initializeDatabase(ctx)
+	if err := initializeDatabase(ctx); err != nil {
+		log.Fatalf("Database initialization failed: %v", err)
+	}
 	defer db.DB.Close()
 
-	initializeRabbitMQ()
+	if err := initializeRabbitMQ(); err != nil {
+		log.Fatalf("RabbitMQ initialization failed: %v", err)
+	}
 	defer rabbitmq.CloseRabbitMQ()
 
 	app := fiber.New()
@@ -43,14 +46,16 @@ func main() {
 	}
 }
 
-func initializeDatabase(ctx context.Context) {
-	db.Connect(ctx, "PRODUCT_DB")
-	db.RunMigrations(ctx, db.DB.DB, migrationPath)
+func initializeDatabase(ctx context.Context) error {
+	if err := db.Connect(ctx, "PRODUCT_DB"); err != nil {
+		return err
+	}
+	return db.RunMigrations(ctx, db.DB.DB, migrationPath)
 }
 
-func initializeRabbitMQ() {
+func initializeRabbitMQ() error {
 	if err := rabbitmq.ConnectRabbitMQ(); err != nil {
-		log.Fatalf("RabbitMQ connection failed: %v", err)
+		return err
 	}
 
 	_, err := rabbitmq.Ch.QueueDeclare(
@@ -62,9 +67,7 @@ func initializeRabbitMQ() {
 		nil,       // arguments
 	)
 
-	if err != nil {
-		log.Fatalf("Failed to declare queue: %v", err)
-	}
+	return err
 }
 
 func setupRoutes(app *fiber.App) {
