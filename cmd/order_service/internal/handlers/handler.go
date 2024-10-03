@@ -26,39 +26,31 @@ func (h *OrderHandler) PlaceOrder(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, "Invalid input")
 	}
 
-	fmt.Println("Order Input: ", orderInput)
-
-	// Step 1: Check if user exists
 	user, err := h.userService.GetUserByID(c.Context(), orderInput.UserID)
 	if err != nil {
 		return fiber.NewError(fiber.StatusNotFound, "User not found")
 	}
 
-	fmt.Println("User that we found after search on our local table ", user)
-
-	// Step 2: Check if product exists and has enough stock
 	product, err := h.productService.GetProductByID(orderInput.ProductID)
 	if err != nil {
 		return fiber.NewError(fiber.StatusNotFound, "Product not found")
 	}
 
-	fmt.Println("Product that we found after search on our local table ", product)
-
 	if product.Stock < orderInput.Quantity {
 		return fiber.NewError(fiber.StatusBadRequest, "Not enough stock")
 	}
 
-	fmt.Println("Product has enough stock")
-
-	// Step 3: Create the order
 	order, err := h.orderService.CreateOrder(user.ID, product.ID, orderInput.Quantity, product.Price)
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "Failed to create order")
 	}
 
-	fmt.Println("Order that we created after search on our local table ", order)
+	// Update the product stock
+	product.Stock -= orderInput.Quantity
+	if err := h.productService.UpdateProductStock(product.ID, product.Stock); err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, "Failed to update product stock")
+	}
 
-	// Step 4: Emit OrderPlaced event
 	err = rabbitmq.EmitEvent("order_events", "OrderPlaced", map[string]interface{}{
 		"order_id":   order.ID,
 		"user_id":    user.ID,

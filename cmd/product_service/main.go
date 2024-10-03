@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -52,14 +53,17 @@ func main() {
 
 func initializeDatabase(ctx context.Context) error {
 	if err := db.Connect(ctx, "PRODUCT_DB"); err != nil {
-		return err
+		return fmt.Errorf("database connection failed: %w", err)
 	}
-	return db.RunMigrations(ctx, db.DB.DB, migrationPath)
+	if err := db.RunMigrations(ctx, db.DB.DB, migrationPath); err != nil {
+		return fmt.Errorf("database migration failed: %w", err)
+	}
+	return nil
 }
 
 func initializeRabbitMQ() error {
 	if err := rabbitmq.ConnectRabbitMQ(); err != nil {
-		return err
+		return fmt.Errorf("RabbitMQ connection failed: %w", err)
 	}
 
 	_, err := rabbitmq.Ch.QueueDeclare(
@@ -70,8 +74,11 @@ func initializeRabbitMQ() error {
 		false,     // no-wait
 		nil,       // arguments
 	)
+	if err != nil {
+		return fmt.Errorf("queue declaration failed: %w", err)
+	}
 
-	return err
+	return nil
 }
 
 func setupRoutes(app *fiber.App) {
@@ -97,7 +104,6 @@ func handleShutdown(cancel context.CancelFunc) {
 	log.Println("Shutting down gracefully...")
 }
 
-// Consume events from the "user_events" queue
 func consumeRabbitmqOrderEvents(ctx context.Context, productService *services.ProductService) {
 	queueName := "order_events"
 	_, err := rabbitmq.Ch.QueueDeclare(
@@ -116,7 +122,9 @@ func consumeRabbitmqOrderEvents(ctx context.Context, productService *services.Pr
 		event := parseEvent(d.Body)
 		switch event.Type {
 		case "OrderPlaced":
-			productService.HandleOrderPlacedEvent(ctx, event.Data)
+			if err := productService.HandleOrderPlacedEvent(ctx, event.Data); err != nil {
+				log.Printf("Failed to handle OrderPlaced event: %v", err)
+			}
 		default:
 			log.Printf("Unhandled event type: %s", event.Type)
 		}

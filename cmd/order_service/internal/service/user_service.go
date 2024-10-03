@@ -22,8 +22,11 @@ func (s *UserService) HandleUserRegisteredEvent(data map[string]interface{}) err
 	// Extract the data and safely cast each field
 	userID, ok := data["user_id"].(string)
 	if !ok {
-		// Handle case where the user_id might be a float64 and convert it to a string
-		userID = fmt.Sprintf("%.0f", data["user_id"].(float64))
+		if idFloat, ok := data["user_id"].(float64); ok {
+			userID = fmt.Sprintf("%.0f", idFloat)
+		} else {
+			return fmt.Errorf("invalid data type for user_id")
+		}
 	}
 
 	username, ok := data["username"].(string)
@@ -47,11 +50,18 @@ func (s *UserService) HandleUserRegisteredEvent(data map[string]interface{}) err
 		UpdatedAt: now,
 	}
 
-	return s.userRepo.CreateUser(user)
+	if err := s.userRepo.CreateUser(user); err != nil {
+		return fmt.Errorf("failed to create user: %w", err)
+	}
+	return nil
 }
 
 func (s *UserService) HandleUserProfileUpdatedEvent(data map[string]interface{}) error {
-	userID := data["id"].(string)
+	userID, ok := data["id"].(string)
+	if !ok {
+		return fmt.Errorf("invalid data type for user_id")
+	}
+
 	// Assuming the event sends updated fields (e.g., username, email)
 	updates := map[string]interface{}{}
 
@@ -62,13 +72,16 @@ func (s *UserService) HandleUserProfileUpdatedEvent(data map[string]interface{})
 		updates["email"] = email
 	}
 
-	return s.userRepo.UpdateUser(userID, updates)
+	if err := s.userRepo.UpdateUser(userID, updates); err != nil {
+		return fmt.Errorf("failed to update user profile: %w", err)
+	}
+	return nil
 }
 
 func (s *UserService) GetUserByID(ctx context.Context, userID string) (*models.User, error) {
 	user, err := s.userRepo.GetUserByID(userID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get user by ID %s: %w", userID, err)
 	}
 	log.Printf("user retrieved successfully with ID: %s", user.ID)
 	return user, nil

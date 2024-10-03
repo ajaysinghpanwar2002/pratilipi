@@ -13,7 +13,6 @@ import (
 
 // RunMigrations runs database migrations for the specified service
 func RunMigrations(ctx context.Context, db *sql.DB, migrationPath string) error {
-	// Create a migration driver instance
 	driver, err := postgres.WithInstance(db, &postgres.Config{})
 	if err != nil {
 		return fmt.Errorf("could not create migrate driver: %w", err)

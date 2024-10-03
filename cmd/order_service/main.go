@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -53,14 +54,14 @@ func main() {
 
 func initializeDatabase(ctx context.Context) error {
 	if err := db.Connect(ctx, "ORDER_DB"); err != nil {
-		return err
+		return fmt.Errorf("database connection failed: %w", err)
 	}
 	return db.RunMigrations(ctx, db.DB.DB, migrationPath)
 }
 
 func initializeRabbitMQ() error {
 	if err := rabbitmq.ConnectRabbitMQ(); err != nil {
-		return err
+		return fmt.Errorf("RabbitMQ connection failed: %w", err)
 	}
 
 	_, err := rabbitmq.Ch.QueueDeclare(
@@ -102,7 +103,6 @@ func handleShutdown(cancel context.CancelFunc) {
 	log.Println("Shutting down gracefully...")
 }
 
-// Consume events from the "user_events" queue
 func consumeRabbitmqUserEvents(userService *services.UserService) {
 	queueName := "user_events"
 	_, err := rabbitmq.Ch.QueueDeclare(
@@ -130,7 +130,6 @@ func consumeRabbitmqUserEvents(userService *services.UserService) {
 	})
 }
 
-// Consume events from the "product_events" queue
 func consumeRabbitmqProductEvents(productService *services.ProductService) {
 	queueName := "product_events"
 	_, err := rabbitmq.Ch.QueueDeclare(

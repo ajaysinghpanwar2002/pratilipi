@@ -3,6 +3,7 @@ package rabbitmq
 import (
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/streadway/amqp"
 )
@@ -13,11 +14,10 @@ var Ch *amqp.Channel
 // ConnectRabbitMQ establishes a connection to RabbitMQ
 func ConnectRabbitMQ() error {
 	var err error
-	// rabbitMQURL := os.Getenv("RABBITMQ_URL")
-	// if rabbitMQURL == "" {
-	// 	return fmt.Errorf("RABBITMQ_URL not set in environment")
-	// }
-	rabbitMQURL := "amqp://admin:adminpass@rabbitmq:5672/"
+	rabbitMQURL := os.Getenv("RABBITMQ_URL")
+	if rabbitMQURL == "" {
+		return fmt.Errorf("RABBITMQ_URL not set in environment")
+	}
 
 	// Connect to RabbitMQ
 	Conn, err = amqp.Dial(rabbitMQURL)
