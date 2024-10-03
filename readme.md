@@ -29,3 +29,38 @@ This project consists of three microservices (`user-service`, `product-service`,
 - [Event Communication Documentation](./docs/event-messages.md)
 
 ---
+
+## Local Setup
+
+Follow these steps to run the project locally:
+
+1. **Clone the repository:**
+
+   ```bash
+   git clone https://github.com/ajaysinghpanwar2002/pratilipi.git
+   ```
+
+2. **Navigate into the repository:**
+
+   ```bash
+   cd pratilipi
+   ```
+
+3. **Build the services:**
+
+   ```bash
+   make build
+   ```
+
+4. **Start the services using Docker:**
+
+   ```bash
+   make start
+   ```
+
+5. **Accessing the services:**
+   - User Service: `http://localhost:8081`
+   - Product Service: `http://localhost:8082`
+   - Order Service: `http://localhost:8083`
+
+---
