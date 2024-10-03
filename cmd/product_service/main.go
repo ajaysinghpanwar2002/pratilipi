@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 	"os"
 	"os/signal"
@@ -13,6 +14,7 @@ import (
 	"github.com/ajaysinghpanwar2002/pratilipi/pkg/db"
 	"github.com/ajaysinghpanwar2002/pratilipi/pkg/rabbitmq"
 	"github.com/gofiber/fiber/v2"
+	"github.com/streadway/amqp"
 )
 
 const (
@@ -39,6 +41,8 @@ func main() {
 
 	app := fiber.New()
 	setupRoutes(app)
+
+	consumeRabbitmqOrderEvents(ctx, services.NewProductService(repositories.NewProductRepository()))
 
 	log.Printf("Service started successfully on port %s", port)
 	if err := app.Listen(port); err != nil {
@@ -91,4 +95,40 @@ func handleShutdown(cancel context.CancelFunc) {
 	<-signalChan
 	cancel()
 	log.Println("Shutting down gracefully...")
+}
+
+// Consume events from the "user_events" queue
+func consumeRabbitmqOrderEvents(ctx context.Context, productService *services.ProductService) {
+	queueName := "order_events"
+	_, err := rabbitmq.Ch.QueueDeclare(
+		queueName,
+		true,  // durable
+		false, // delete when unused
+		false, // exclusive
+		false, // no-wait
+		nil,   // arguments
+	)
+	if err != nil {
+		log.Fatalf("Failed to declare queue %s: %v", queueName, err)
+	}
+
+	rabbitmq.ConsumeMessages(queueName, func(d amqp.Delivery) {
+		event := parseEvent(d.Body)
+		switch event.Type {
+		case "OrderPlaced":
+			productService.HandleOrderPlacedEvent(ctx, event.Data)
+		default:
+			log.Printf("Unhandled event type: %s", event.Type)
+		}
+	})
+}
+
+func parseEvent(body []byte) (event struct {
+	Type string
+	Data map[string]interface{}
+}) {
+	if err := json.Unmarshal(body, &event); err != nil {
+		log.Printf("Failed to parse event: %v", err)
+	}
+	return event
 }
