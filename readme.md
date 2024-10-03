@@ -1,69 +1,31 @@
-```bash
-pratilipi/
-├── cmd/
-    |──user-service
-        ├── db/
-          ├── migrations/
-              ├── 001_create_users_table.up.sql
-                 └── 001_create_users_table.down.sql
-        |──internal/
-                ├── handlers/
-                │   └── user_handler.go
-                ├── repositories/
-                │   └── user_repository.go
-                ├── services/
-                │   └── user_service.go
-                ├── middlewares/
-                │   └── jwt_middleware.go
-                ├── models/
-                │   └── user.go
-        ├── main.go
-        ├── Dockerfile
-    |──product-service
-        ├── db/
-          ├── migrations/
-              ├── 001_create_product_table.up.sql
-                 └── 001_create_product_table.down.sql
-        |──internal/
-                ├── handlers/
-                │   └── product_handler.go
-                ├── repositories/
-                │   └── product_repository.go
-                ├── services/
-                │   └── product_service.go
-                ├── models/
-                │   └── product.go
-        ├── main.go
-        ├── Dockerfile
-    |──order-service
-        ├── db/
-          ├── migrations/
-              ├── 001_create_order_table.up.sql
-                 └── 001_create_order_table.down.sql
-        |──internal/
-                ├── handlers/
-                │   └── order_handler.go
-                ├── repositories/
-                │   └── order_repository.go
-                ├── services/
-                │   └── order_service.go
-                ├── models/
-                │   └── order.go
-        ├── main.go
-        ├── Dockerfile
-├── pkg
-    ├── db
-        ├── init_db
-        ├── migrate.go
-        ├── sqlx_setup.go
-    ├── rabbitmq
-        ├── connection.go
-        ├── events.go
-├── docker-compose.yml
-├── init/
-├── Makefile
-├── go.mod
-├── go.sum
-├── wait-for-it.sh
-└── .env
-```
+# Project Overview
+
+## Purpose
+This project consists of three microservices (`user-service`, `product-service`, and `order-service`) that manage user registration, product inventory, and order placement. The services communicate asynchronously using RabbitMQ for event-driven architecture and use PostgreSQL for data persistence.
+
+## Key Features
+- **Microservices**: Independent services for users, products, and orders.
+- **Asynchronous Communication**: RabbitMQ for event-driven message passing.
+- **Data Persistence**: PostgreSQL with migrations handled via Golang's `sqlx`.
+- **Caching**: Redis is used for caching to improve read performance.
+- **Authentication**: JWT-based authentication in the `user-service`.
+
+## Technologies
+- Golang (Fiber Framework)
+- PostgreSQL
+- RabbitMQ
+- Redis
+- Docker (for containerization)
+- gqlgen (for the GraphQL API gateway)
+
+---
+
+## Documentation
+
+- [User Service Documentation](./cmd/user_service/readme.md)
+- [Product Service Documentation](./cmd/product_service/readme.md)
+- [Order Service Documentation](./cmd/order_service/readme.md)
+- [API Endpoints Documentation](./docs/api-endpoints.md)
+- [Event Communication Documentation](./docs/event-messages.md)
+
+---
