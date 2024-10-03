@@ -19,19 +19,35 @@ pratilipi/
 |   |   │   └── sqlx_setup.go
 |   |   ├── main.go
 │   ├── product_service/
+│   │   ├── handlers/
+│   │   │   └── product_handler.go
+│   │   ├── repositories/
+│   │   │   └── product_repository.go
+│   │   ├── services/
+│   │   │   └── product_service.go
+│   │   ├── models/
+│   │   │   └── product.go
 │   │   ├── db/
 │   │   │   ├── migrations/
-│   │   │   ├── sqlx_setup.go
-│   │   │   └── migrate.go
+│   │   │   │   ├── 001_create_product_table.up.sql
+│   │   │   │   └── 001_create_product_table.down.sql
+│   │   ├── main.go
 │   │   ├── Dockerfile
-│   │   └── main.go
 │   ├── order_service/
+│   │   ├── handlers/
+│   │   │   └── order_handler.go
+│   │   ├── repositories/
+│   │   │   └── order_repository.go
+│   │   ├── services/
+│   │   │   └── order_service.go
+│   │   ├── models/
+│   │   │   └── order.go
 │   │   ├── db/
 │   │   │   ├── migrations/
-│   │   │   ├── sqlx_setup.go
-│   │   │   └── migrate.go
+│   │   │   │   ├── 001_create_orders_table.up.sql
+│   │   │   │   └── 001_create_orders_table.down.sql
+│   │   ├── main.go
 │   │   ├── Dockerfile
-│   │   └── main.go
 ├── docker-compose.yml
 ├── init/
 ├── Makefile
