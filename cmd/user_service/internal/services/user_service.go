@@ -64,11 +64,11 @@ func (s *UserService) Authenticate(ctx context.Context, username, password strin
 	return user, nil
 }
 
-func (s *UserService) UpdateProfile(ctx context.Context, userId uint, updateData map[string]interface{}) error {
-	if err := s.repo.UpdateUserProfile(ctx, userId, updateData); err != nil {
+func (s *UserService) UpdateProfile(ctx context.Context, userID string, updateData map[string]interface{}) error {
+	if err := s.repo.UpdateUserProfile(ctx, userID, updateData); err != nil {
 		log.Printf("%s: %v", errUpdatingUserProfile, err)
 		return fmt.Errorf("%s: %w", errUpdatingUserProfile, err)
 	}
-	log.Printf("User profile updated successfully for user ID: %d", userId)
+	log.Printf("User profile updated successfully for user ID: %s", userID)
 	return nil
 }

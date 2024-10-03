@@ -42,7 +42,7 @@ func (r *UserRepository) GetUserByUsername(ctx context.Context, username string)
 	return user, nil
 }
 
-func (r *UserRepository) UpdateUserProfile(ctx context.Context, userID uint, updateData map[string]interface{}) error {
+func (r *UserRepository) UpdateUserProfile(ctx context.Context, userID string, updateData map[string]interface{}) error {
 	query, values := buildUpdateQuery(updateData, userID)
 	_, err := db.DB.ExecContext(ctx, query, values...)
 	if err != nil {
@@ -52,7 +52,7 @@ func (r *UserRepository) UpdateUserProfile(ctx context.Context, userID uint, upd
 	return nil
 }
 
-func buildUpdateQuery(updateData map[string]interface{}, userID uint) (string, []interface{}) {
+func buildUpdateQuery(updateData map[string]interface{}, userID string) (string, []interface{}) {
 	query := "UPDATE users SET "
 	values := []interface{}{}
 	i := 1
@@ -67,11 +67,10 @@ func buildUpdateQuery(updateData map[string]interface{}, userID uint) (string, [
 	}
 
 	query += ", updated_at = $" + fmt.Sprint(i) + " WHERE id = $" + fmt.Sprint(i+1)
-	values = append(values, currentTime(), int(userID))
+	values = append(values, currentTime(), userID)
 
 	return query, values
 }
-
 func currentTime() time.Time {
 	return time.Now()
 }

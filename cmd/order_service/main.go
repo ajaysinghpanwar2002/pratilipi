@@ -90,7 +90,7 @@ func setupRoutes(app *fiber.App) {
 	app.Get("/orders", handler.GetOrders)
 
 	app.Get("/health", func(c *fiber.Ctx) error {
-		return c.SendString("order Service is running")
+		return c.SendString("Order Service is running")
 	})
 }
 
@@ -102,13 +102,27 @@ func handleShutdown(cancel context.CancelFunc) {
 	log.Println("Shutting down gracefully...")
 }
 
+// Consume events from the "user_events" queue
 func consumeRabbitmqUserEvents(userService *services.UserService) {
-	rabbitmq.ConsumeMessages("user_events", func(d amqp.Delivery) {
+	queueName := "user_events"
+	_, err := rabbitmq.Ch.QueueDeclare(
+		queueName,
+		true,  // durable
+		false, // delete when unused
+		false, // exclusive
+		false, // no-wait
+		nil,   // arguments
+	)
+	if err != nil {
+		log.Fatalf("Failed to declare queue %s: %v", queueName, err)
+	}
+
+	rabbitmq.ConsumeMessages(queueName, func(d amqp.Delivery) {
 		event := parseEvent(d.Body)
 		switch event.Type {
 		case "UserRegistered":
 			userService.HandleUserRegisteredEvent(event.Data)
-		case "UserUpdated":
+		case "UserProfileUpdated":
 			userService.HandleUserProfileUpdatedEvent(event.Data)
 		default:
 			log.Printf("Unhandled event type: %s", event.Type)
@@ -116,8 +130,22 @@ func consumeRabbitmqUserEvents(userService *services.UserService) {
 	})
 }
 
+// Consume events from the "product_events" queue
 func consumeRabbitmqProductEvents(productService *services.ProductService) {
-	rabbitmq.ConsumeMessages("product_events", func(d amqp.Delivery) {
+	queueName := "product_events"
+	_, err := rabbitmq.Ch.QueueDeclare(
+		queueName,
+		true,  // durable
+		false, // delete when unused
+		false, // exclusive
+		false, // no-wait
+		nil,   // arguments
+	)
+	if err != nil {
+		log.Fatalf("Failed to declare queue %s: %v", queueName, err)
+	}
+
+	rabbitmq.ConsumeMessages(queueName, func(d amqp.Delivery) {
 		event := parseEvent(d.Body)
 		switch event.Type {
 		case "ProductCreated":

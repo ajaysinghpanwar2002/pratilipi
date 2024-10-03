@@ -1,6 +1,8 @@
 package services
 
 import (
+	"time"
+
 	"github.com/ajaysinghpanwar2002/pratilipi/cmd/order_service/internal/models"
 	repositories "github.com/ajaysinghpanwar2002/pratilipi/cmd/order_service/internal/repository"
 )
@@ -18,12 +20,15 @@ func (s *OrderService) PlaceOrder(order *models.Order) error {
 	return s.orderRepo.CreateOrder(order)
 }
 
-func (s *OrderService) CreateOrder(userID, productID string, quantity int) (*models.Order, error) {
+func (s *OrderService) CreateOrder(userID, productID string, quantity int, productPrice float64) (*models.Order, error) {
 	order := &models.Order{
-		UserID:    userID,
-		ProductID: productID,
-		Quantity:  quantity,
-		Status:    "Pending",
+		UserID:     userID,
+		ProductID:  productID,
+		Quantity:   quantity,
+		Status:     "Pending",
+		TotalPrice: productPrice * float64(quantity),
+		CreatedAt:  time.Now(),
+		UpdatedAt:  time.Now(),
 	}
 
 	err := s.PlaceOrder(order)

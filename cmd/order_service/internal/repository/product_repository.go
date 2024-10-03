@@ -1,6 +1,8 @@
 package repositories
 
 import (
+	"log"
+
 	"github.com/ajaysinghpanwar2002/pratilipi/cmd/order_service/internal/models"
 	"github.com/ajaysinghpanwar2002/pratilipi/pkg/db"
 )
@@ -14,7 +16,13 @@ func NewProductRepository() *ProductRepository {
 
 func (r *ProductRepository) CreateProduct(product models.Product) error {
 	query := `INSERT INTO products (id, name, price, stock, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6)`
-	_, err := db.DB.Exec(query, product.ID, product.Name, product.Price, product.Stock, product.CreatedAt, product.UpdatedAt)
+	result, err := db.DB.Exec(query, product.ID, product.Name, product.Price, product.Stock, product.CreatedAt, product.UpdatedAt)
+	if err != nil {
+		log.Printf("Failed to insert user: %v", err)
+	} else {
+		rowsAffected, _ := result.RowsAffected()
+		log.Printf("User inserted successfully, rows affected: %d", rowsAffected)
+	}
 	return err
 }
 

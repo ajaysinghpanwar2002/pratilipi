@@ -98,19 +98,23 @@ func (h *UserHandler) LoginUser(c *fiber.Ctx) error {
 
 func (h *UserHandler) UpdateProfile(c *fiber.Ctx) error {
 	ctx := c.Context()
-	userID := c.Locals("user_id").(uint) // Extract user_id from JWT
+
+	// Extract user_id from JWT as string
+	userID := c.Locals("user_id").(string)
 
 	var updateData map[string]interface{}
 	if err := c.BodyParser(&updateData); err != nil {
-		return errorResponse(c, StatusBadRequest, "Invalid input")
+		return errorResponse(c, fiber.StatusBadRequest, "Invalid input")
 	}
 
 	if err := h.service.UpdateProfile(ctx, userID, updateData); err != nil {
-		return errorResponse(c, StatusInternalServerError, "Failed to update profile")
+		return errorResponse(c, fiber.StatusInternalServerError, "Failed to update profile")
 	}
 
 	err := rabbitmq.EmitEvent(userEventsQueue, "UserProfileUpdated", map[string]interface{}{
-		"id": userID,
+		"id":       userID,
+		"username": updateData["username"],
+		"email":    updateData["email"],
 	})
 
 	if err != nil {

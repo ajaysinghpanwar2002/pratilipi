@@ -37,7 +37,7 @@ func (r *ProductRepository) CreateProduct(ctx context.Context, product *models.P
 	return nil
 }
 
-func (r *ProductRepository) GetProductByID(ctx context.Context, id int64) (*models.Product, error) {
+func (r *ProductRepository) GetProductByID(ctx context.Context, id string) (*models.Product, error) {
 	var product models.Product
 	query := `SELECT * FROM products WHERE id = $1`
 	if err := db.DB.GetContext(ctx, &product, query, id); err != nil {
@@ -48,8 +48,30 @@ func (r *ProductRepository) GetProductByID(ctx context.Context, id int64) (*mode
 }
 
 func (r *ProductRepository) UpdateProduct(ctx context.Context, product *models.Product) error {
-	query := `UPDATE products SET name = :name, description = :description, price = :price, stock = :stock, updated_at = NOW() WHERE id = :id`
-	_, err := db.DB.NamedExecContext(ctx, query, product)
+	query := "UPDATE products SET "
+	params := make(map[string]interface{})
+
+	if product.Name != "" {
+		query += "name = :name, "
+		params["name"] = product.Name
+	}
+	if product.Description != "" {
+		query += "description = :description, "
+		params["description"] = product.Description
+	}
+	if product.Price != 0 {
+		query += "price = :price, "
+		params["price"] = product.Price
+	}
+	if product.Stock != 0 {
+		query += "stock = :stock, "
+		params["stock"] = product.Stock
+	}
+
+	query += "updated_at = NOW() WHERE id = :id"
+	params["id"] = product.ID
+
+	_, err := db.DB.NamedExecContext(ctx, query, params)
 	if err != nil {
 		log.Printf("Failed to update product: %v", err)
 		return fmt.Errorf("failed to update product: %w", err)
@@ -57,7 +79,7 @@ func (r *ProductRepository) UpdateProduct(ctx context.Context, product *models.P
 	return nil
 }
 
-func (r *ProductRepository) DeleteProduct(ctx context.Context, id int64) error {
+func (r *ProductRepository) DeleteProduct(ctx context.Context, id string) error {
 	query := `DELETE FROM products WHERE id = $1`
 	_, err := db.DB.ExecContext(ctx, query, id)
 	if err != nil {
