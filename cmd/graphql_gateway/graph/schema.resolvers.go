@@ -38,6 +38,10 @@ func (r *mutationResolver) RegisterUser(ctx context.Context, input model.Registe
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode != http.StatusCreated {
+		return nil, fmt.Errorf("unexpected status code from user service: %v", resp.StatusCode)
+	}
+
 	var user model.User
 	if err := json.NewDecoder(resp.Body).Decode(&user); err != nil {
 		return nil, fmt.Errorf("error decoding response: %v", err)
@@ -52,8 +56,8 @@ func (r *mutationResolver) CreateProduct(ctx context.Context, input model.Produc
 	productData := map[string]interface{}{
 		"name":        input.Name,
 		"description": input.Description,
-		"price":       input.Price,
-		"stock":       input.Stock,
+		"price":       int(input.Price),
+		"stock":       int(input.Stock),
 	}
 
 	// Convert the input to JSON
@@ -62,15 +66,18 @@ func (r *mutationResolver) CreateProduct(ctx context.Context, input model.Produc
 		return nil, fmt.Errorf("failed to marshal product data: %v", err)
 	}
 
+	fmt.Println("jsonData: ", bytes.NewBuffer(jsonData))
+
 	// Send POST request to the product service
 	resp, err := http.Post(productServiceURL+"products", "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create product: %v", err)
 	}
+	fmt.Println("resposne", resp)
 	defer resp.Body.Close()
 
 	// Check for errors in the response
-	if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode != http.StatusCreated {
 		body, _ := io.ReadAll(resp.Body)
 		return nil, fmt.Errorf("failed to create product, status code: %d, response: %s", resp.StatusCode, string(body))
 	}
@@ -109,7 +116,7 @@ func (r *mutationResolver) PlaceOrder(ctx context.Context, input model.OrderInpu
 	defer resp.Body.Close()
 
 	// Check for errors in the response
-	if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode != http.StatusCreated {
 		body, _ := io.ReadAll(resp.Body)
 		return nil, fmt.Errorf("failed to place order, status code: %d, response: %s", resp.StatusCode, string(body))
 	}

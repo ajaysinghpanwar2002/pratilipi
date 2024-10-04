@@ -62,7 +62,16 @@ func (h *UserHandler) RegisterUser(c *fiber.Ctx) error {
 		log.Printf("Failed to emit event: %v", err)
 	}
 
-	return c.Status(StatusCreated).JSON(fiber.Map{"message": "User registered successfully", "user_id": user.ID})
+	return c.Status(StatusCreated).JSON(fiber.Map{
+		"message": "User registered successfully",
+		"user": fiber.Map{
+			"id":        user.ID,
+			"username":  user.Username,
+			"email":     user.Email,
+			"createdAt": user.CreatedAt,
+			"updatedAt": user.UpdatedAt,
+		},
+	})
 }
 
 func (h *UserHandler) LoginUser(c *fiber.Ctx) error {

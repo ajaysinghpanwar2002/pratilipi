@@ -39,7 +39,7 @@ func (s *UserService) RegisterUser(ctx context.Context, user *models.User) error
 		log.Printf("%s: %v", errCreatingUser, err)
 		return fmt.Errorf("%s: %w", errCreatingUser, err)
 	}
-	log.Printf("User registered successfully with ID: %d", user.ID)
+	log.Printf("user registered successfully with ID: %s", user.ID)
 	return nil
 }
 
