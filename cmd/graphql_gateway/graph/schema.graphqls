@@ -1,0 +1,66 @@
+# Queries
+type Query {
+  users: [User!]!
+  user(id: ID!): User!
+  products: [Product!]!
+  product(id: ID!): Product!
+  orders: [Order!]!
+  order(id: ID!): Order!
+}
+
+# Mutations
+type Mutation {
+  registerUser(input: RegisterInput!): User!
+  createProduct(input: ProductInput!): Product!
+  placeOrder(input: OrderInput!): Order!
+}
+
+# Input types for mutations
+input RegisterInput {
+  username: String!
+  email: String!
+  password: String!
+}
+
+input ProductInput {
+  name: String!
+  description: String
+  price: Float!
+  stock: Int!
+}
+
+input OrderInput {
+  user_id: ID!
+  product_id: ID!
+  quantity: Int!
+}
+
+# Types for responses
+type User {
+  id: ID!
+  username: String!
+  email: String!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type Product {
+  id: ID!
+  name: String!
+  description: String!
+  price: Float!
+  stock: Int!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type Order {
+  id: ID!
+  user_id: ID!
+  product_id: ID!
+  quantity: Int!
+  total_price: Float!
+  status: String!
+  createdAt: String!
+  updatedAt: String!
+}
