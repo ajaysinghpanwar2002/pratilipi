@@ -11,9 +11,14 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 
 	"github.com/ajaysinghpanwar2002/pratilipi/cmd/graphql_gateway/graph/model"
 )
+
+var userServiceURL = os.Getenv("USER_SERVICE_URL")
+var productServiceURL = os.Getenv("PRODUCT_SERVICE_URL")
+var orderServiceURL = os.Getenv("ORDER_SERVICE_URL")
 
 // RegisterUser is the resolver for the registerUser field.
 func (r *mutationResolver) RegisterUser(ctx context.Context, input model.RegisterInput) (*model.User, error) {
@@ -27,8 +32,7 @@ func (r *mutationResolver) RegisterUser(ctx context.Context, input model.Registe
 	if err != nil {
 		return nil, fmt.Errorf("error creating JSON payload: %v", err)
 	}
-
-	resp, err := http.Post("http://localhost:8081/register", "application/json", bytes.NewBuffer(userJson))
+	resp, err := http.Post(userServiceURL+"register", "application/json", bytes.NewBuffer(userJson))
 	if err != nil {
 		return nil, fmt.Errorf("error sending request to user service: %v", err)
 	}
@@ -59,7 +63,7 @@ func (r *mutationResolver) CreateProduct(ctx context.Context, input model.Produc
 	}
 
 	// Send POST request to the product service
-	resp, err := http.Post("http://localhost:8082/products", "application/json", bytes.NewBuffer(jsonData))
+	resp, err := http.Post(productServiceURL+"products", "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create product: %v", err)
 	}
@@ -97,8 +101,8 @@ func (r *mutationResolver) PlaceOrder(ctx context.Context, input model.OrderInpu
 		return nil, fmt.Errorf("failed to marshal order data: %v", err)
 	}
 
-	// Send POST request to the order service
-	resp, err := http.Post("http://localhost:8083/orders", "application/json", bytes.NewBuffer(jsonData))
+	// Send POST request to the order service "http://localhost:8083/orders"
+	resp, err := http.Post(orderServiceURL+"orders", "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
 		return nil, fmt.Errorf("failed to place order: %v", err)
 	}
@@ -123,7 +127,8 @@ func (r *mutationResolver) PlaceOrder(ctx context.Context, input model.OrderInpu
 
 // Users is the resolver for the users field.
 func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
-	resp, err := http.Get("http://localhost:8081/users")
+	// "http://localhost:8081/users"
+	resp, err := http.Get(userServiceURL + "users")
 	if err != nil {
 		return nil, err
 	}
@@ -137,9 +142,9 @@ func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
 	return users, nil
 }
 
-// User is the resolver for the user field.
+// User is the resolver for the user field. "http://localhost:8081/users/" + id
 func (r *queryResolver) User(ctx context.Context, id string) (*model.User, error) {
-	resp, err := http.Get("http://localhost:8081/users/" + id)
+	resp, err := http.Get(userServiceURL + "users/" + id)
 	if err != nil {
 		return nil, err
 	}
@@ -153,9 +158,9 @@ func (r *queryResolver) User(ctx context.Context, id string) (*model.User, error
 	return &user, nil
 }
 
-// Products is the resolver for the products field.
+// Products is the resolver for the products field. "http://localhost:8082/products"
 func (r *queryResolver) Products(ctx context.Context) ([]*model.Product, error) {
-	resp, err := http.Get("http://localhost:8082/products")
+	resp, err := http.Get(productServiceURL + "products")
 	if err != nil {
 		return nil, err
 	}
@@ -169,9 +174,9 @@ func (r *queryResolver) Products(ctx context.Context) ([]*model.Product, error) 
 	return products, nil
 }
 
-// Product is the resolver for the product field.
+// Product is the resolver for the product field."http://localhost:8082/products/" + id
 func (r *queryResolver) Product(ctx context.Context, id string) (*model.Product, error) {
-	resp, err := http.Get("http://localhost:8082/products/" + id)
+	resp, err := http.Get(productServiceURL + "products/" + id)
 	if err != nil {
 		return nil, err
 	}
@@ -185,9 +190,9 @@ func (r *queryResolver) Product(ctx context.Context, id string) (*model.Product,
 	return &product, nil
 }
 
-// Orders is the resolver for the orders field.
+// Orders is the resolver for the orders field. "http://localhost:8083/orders"
 func (r *queryResolver) Orders(ctx context.Context) ([]*model.Order, error) {
-	resp, err := http.Get("http://localhost:8083/orders")
+	resp, err := http.Get(orderServiceURL + "orders")
 	if err != nil {
 		return nil, err
 	}
@@ -201,9 +206,9 @@ func (r *queryResolver) Orders(ctx context.Context) ([]*model.Order, error) {
 	return orders, nil
 }
 
-// Order is the resolver for the order field.
+// Order is the resolver for the order field. "http://localhost:8083/orders/" + id
 func (r *queryResolver) Order(ctx context.Context, id string) (*model.Order, error) {
-	resp, err := http.Get("http://localhost:8083/orders/" + id)
+	resp, err := http.Get(orderServiceURL + "orders/" + id)
 	if err != nil {
 		return nil, err
 	}

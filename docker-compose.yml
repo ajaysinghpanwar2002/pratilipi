@@ -97,6 +97,23 @@ services:
     networks:
       - app-network
 
+  graphql_gateway:
+    build:
+      context: .
+      dockerfile: ./cmd/graphql_gateway/Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      - user_service
+      - product_service
+      - order_service
+    environment:
+      USER_SERVICE_URL: ${USER_SERVICE_URL}
+      PRODUCT_SERVICE_URL: ${PRODUCT_SERVICE_URL}
+      ORDER_SERVICE_URL: ${ORDER_SERVICE_URL}
+    networks:
+      - app-network
+
 volumes:
   postgres-data:
   rabbitmq-data:

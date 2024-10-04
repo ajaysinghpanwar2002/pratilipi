@@ -77,3 +77,14 @@ func (h *OrderHandler) GetOrders(c *fiber.Ctx) error {
 	}
 	return c.JSON(orders)
 }
+
+func (h *OrderHandler) GetOrder(c *fiber.Ctx) error {
+	orderID := c.Params("id")
+	order, err := h.orderService.GetOrderByID(orderID)
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"error": "Order not found",
+		})
+	}
+	return c.JSON(order)
+}

@@ -88,3 +88,13 @@ func (r *ProductRepository) DeleteProduct(ctx context.Context, id string) error 
 	}
 	return nil
 }
+
+func (r *ProductRepository) GetAllProducts(ctx context.Context) ([]models.Product, error) {
+	var products []models.Product
+	query := `SELECT * FROM products`
+	if err := db.DB.SelectContext(ctx, &products, query); err != nil {
+		log.Printf("Failed to get all products: %v", err)
+		return nil, fmt.Errorf("failed to get all products: %w", err)
+	}
+	return products, nil
+}

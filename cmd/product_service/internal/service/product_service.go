@@ -80,6 +80,14 @@ func (s *ProductService) HandleOrderPlacedEvent(ctx context.Context, data map[st
 	return nil
 }
 
+func (s *ProductService) GetAllProducts(ctx context.Context) ([]models.Product, error) {
+	products, err := s.repo.GetAllProducts(ctx)
+	if err != nil {
+		return nil, s.logAndReturnError("Failed to get all products", err)
+	}
+	return products, nil
+}
+
 func (s *ProductService) logAndReturnError(message string, err error) error {
 	log.Printf("%s: %v", message, err)
 	return fmt.Errorf("%s: %w", message, err)

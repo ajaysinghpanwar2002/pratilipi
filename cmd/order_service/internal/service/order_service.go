@@ -49,3 +49,11 @@ func (s *OrderService) GetAllOrders() ([]*models.Order, error) {
 	}
 	return orders, nil
 }
+
+func (s *OrderService) GetOrderByID(id string) (*models.Order, error) {
+	order, err := s.orderRepo.GetOrderByID(id)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get order by ID: %w", err)
+	}
+	return order, nil
+}

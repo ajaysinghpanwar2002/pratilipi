@@ -74,3 +74,25 @@ func buildUpdateQuery(updateData map[string]interface{}, userID string) (string,
 func currentTime() time.Time {
 	return time.Now()
 }
+
+func (r *UserRepository) GetAllUsers(ctx context.Context) ([]models.User, error) {
+	var users []models.User
+	query := `SELECT * FROM users`
+	err := db.DB.SelectContext(ctx, &users, query)
+	if err != nil {
+		log.Printf("Error fetching all users: %v", err)
+		return nil, fmt.Errorf("error fetching all users: %w", err)
+	}
+	return users, nil
+}
+
+func (r *UserRepository) GetUserByID(ctx context.Context, userID string) (models.User, error) {
+	var user models.User
+	query := `SELECT * FROM users WHERE id = $1`
+	err := db.DB.GetContext(ctx, &user, query, userID)
+	if err != nil {
+		log.Printf("Error fetching user by ID: %v", err)
+		return models.User{}, fmt.Errorf("error fetching user by ID: %w", err)
+	}
+	return user, nil
+}

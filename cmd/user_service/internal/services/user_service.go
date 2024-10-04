@@ -72,3 +72,21 @@ func (s *UserService) UpdateProfile(ctx context.Context, userID string, updateDa
 	log.Printf("User profile updated successfully for user ID: %s", userID)
 	return nil
 }
+
+func (s *UserService) GetAllUsers(ctx context.Context) ([]models.User, error) {
+	users, err := s.repo.GetAllUsers(ctx)
+	if err != nil {
+		log.Printf("Error fetching all users: %v", err)
+		return nil, err
+	}
+	return users, nil
+}
+
+func (s *UserService) GetUserByID(ctx context.Context, userID string) (models.User, error) {
+	user, err := s.repo.GetUserByID(ctx, userID)
+	if err != nil {
+		log.Printf("Error fetching user by ID: %v", err)
+		return models.User{}, err
+	}
+	return user, nil
+}

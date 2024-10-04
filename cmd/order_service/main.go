@@ -89,6 +89,7 @@ func setupRoutes(app *fiber.App) {
 
 	app.Post("/orders", handler.PlaceOrder)
 	app.Get("/orders", handler.GetOrders)
+	app.Get("/orders/:id", handler.GetOrder)
 
 	app.Get("/health", func(c *fiber.Ctx) error {
 		return c.SendString("Order Service is running")

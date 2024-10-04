@@ -76,6 +76,8 @@ func setupRoutes(app *fiber.App) {
 	app.Post("/register", userHandler.RegisterUser)
 	app.Post("/login", userHandler.LoginUser)
 	app.Put("/profile", middlewares.AuthMiddleware, userHandler.UpdateProfile)
+	app.Get("/users", userHandler.GetAllUsers)
+	app.Get("/users/:id", userHandler.GetUserById)
 
 	app.Get("/health", func(c *fiber.Ctx) error {
 		return c.SendString("User Service is running")

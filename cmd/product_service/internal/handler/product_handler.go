@@ -87,6 +87,15 @@ func (h *ProductHandler) DeleteProduct(c *fiber.Ctx) error {
 	return c.SendStatus(fiber.StatusNoContent)
 }
 
+func (h *ProductHandler) GetAllProducts(c *fiber.Ctx) error {
+	ctx := c.Context()
+	products, err := h.service.GetAllProducts(ctx)
+	if err != nil {
+		return errorResponse(c, fiber.StatusInternalServerError, "Failed to get products")
+	}
+	return c.JSON(products)
+}
+
 func emitProductEvent(eventType string, product models.Product) error {
 	return rabbitmq.EmitEvent(productEventsQueue, eventType, map[string]interface{}{
 		"product_id": product.ID,

@@ -124,6 +124,29 @@ func (h *UserHandler) UpdateProfile(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"message": "Profile updated successfully"})
 }
 
+func (h *UserHandler) GetAllUsers(c *fiber.Ctx) error {
+	ctx := c.Context()
+
+	users, err := h.service.GetAllUsers(ctx)
+	if err != nil {
+		return errorResponse(c, fiber.StatusInternalServerError, "Failed to get users")
+	}
+
+	return c.JSON(users)
+}
+
+func (h *UserHandler) GetUserById(c *fiber.Ctx) error {
+	ctx := c.Context()
+	userID := c.Params("id")
+
+	user, err := h.service.GetUserByID(ctx, userID)
+	if err != nil {
+		return errorResponse(c, fiber.StatusInternalServerError, "Failed to get user")
+	}
+
+	return c.JSON(user)
+}
+
 func errorResponse(c *fiber.Ctx, statusCode int, message string) error {
 	return c.Status(statusCode).JSON(fiber.Map{"error": message})
 }

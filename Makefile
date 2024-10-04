@@ -37,12 +37,12 @@ cache-flush:
 
 # Rebuild and restart a specific service
 rebuild-service:
-	@read -p "Enter service name (user_service, product_service, order_service): " SERVICE; \
+	@read -p "Enter service name (user_service, product_service, order_service, graphql_gateway): " SERVICE; \
 	echo "Rebuilding and restarting $$SERVICE..."; \
 	docker-compose -f $(COMPOSE_FILE) up -d --no-deps --build $$SERVICE
 
 # View logs of a specific service
 logs-service:
-	@read -p "Enter service name (user_service, product_service, order_service): " SERVICE; \
+	@read -p "Enter service name (user_service, product_service, order_service, graphql_gateway): " SERVICE; \
 	echo "Viewing logs of $$SERVICE..."; \
 	docker-compose -f $(COMPOSE_FILE) logs -f $$SERVICE

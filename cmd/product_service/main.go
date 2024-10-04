@@ -90,6 +90,7 @@ func setupRoutes(app *fiber.App) {
 	app.Get("/products/:id", productHandler.GetProduct)
 	app.Put("/products/:id", productHandler.UpdateProduct)
 	app.Delete("/products/:id", productHandler.DeleteProduct)
+	app.Get("/products", productHandler.GetAllProducts)
 
 	app.Get("/health", func(c *fiber.Ctx) error {
 		return c.SendString("Product Service is running")
