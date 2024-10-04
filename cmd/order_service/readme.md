@@ -21,6 +21,6 @@ The orders are stored in the `orders` table:
 - **`OrderPlaced`**: Emitted after successfully placing an order, consumed by other services.
 
 ## API Endpoints
-For more details on the API, refer to the [API Endpoints](api-endpoints.md).
+For more details on the API, refer to the [API Endpoints](../../docs/api-endpoints.md).
 
 ---

@@ -21,6 +21,6 @@ The products are stored in the `products` table:
 - **`InventoryUpdated`**: Consumed when product stock is updated.
 
 ## API Endpoints
-For more details on the API, refer to the [API Endpoints](api-endpoints.md).
+For more details on the API, refer to the [API Endpoints](../../docs/api-endpoints.md).
 
 ---
