@@ -59,8 +59,13 @@ Follow these steps to run the project locally:
    ```
 
 5. **Accessing the services:**
+   - GraphQL Gateway: `http://localhost:8080`
    - User Service: `http://localhost:8081`
    - Product Service: `http://localhost:8082`
    - Order Service: `http://localhost:8083`
 
 ---
+
+## Postman Collection
+
+I am providing a Postman collection to test the API endpoints. You can download it using the link: [Postman Collection](./pratilipi.postman_collection.json)
